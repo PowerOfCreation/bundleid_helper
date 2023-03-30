@@ -22,16 +22,25 @@ module BundleidHelper
       else
         ipa_name = ARGV[0]
       end
-
-      ###unzip plist file from ipa
-      command = "unzip -jo #{ipa_name} \"Payload/*.app/Info.plist\" -d xxxxxtemp"
+      
+      if File.extname(ipa_name) == ".ipa"
+        ###unzip plist file from ipa
+        command = "unzip -jo #{ipa_name} \"Payload/*.app/Info.plist\" -d /tmp/xxxxxtemp"
+      elsif File.extname(ipa_name) == ".app"
+        command = "mkdir -p /tmp/xxxxxtemp && cp #{ipa_name}/Info.plist /tmp/xxxxxtemp/Info.plist"
+      else
+        puts "Unknown file ending. Please use .ipa or .app!"
+        exit 1
+      end
+      
       `#{command}`
-      plist = CFPropertyList::List.new(:file => "xxxxxtemp/Info.plist")
+      
+      plist = CFPropertyList::List.new(:file => "/tmp/xxxxxtemp/Info.plist")
       data = CFPropertyList.native_types(plist.value)
       ###get bundle id
       bundle_id = data['CFBundleIdentifier']
       ###remove temp directory: xxxxxtemp
-      `rm -rf xxxxxtemp`
+      `rm -rf /tmp/xxxxxtemp`
       puts bundle_id
     end
   end
